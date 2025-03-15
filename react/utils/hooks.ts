@@ -2,6 +2,7 @@ import {
   startTransition,
   useEffect,
   useState,
+  useRef,
 } from "react";
 
 export function useAppearanceDelay(
@@ -37,47 +38,27 @@ export function useAppearanceDelay(
   return delayedShow;
 }
 
-export function debounce<T extends (...args: any) => any>(callback: T, delay: number) { 
-  let timeout: NodeJS.Timeout | null; 
- 
-  return function(...args: Parameters<T>) { 
-    if (timeout) clearTimeout(timeout); 
- 
-    setTimeout(() => { 
-      timeout = null; 
-      callback(...args); 
-    }, delay); 
-  } 
-}
+export const useDebouncedValue = <T>(value: T, delayMs: number) => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
-export function throttle(fn, delay, ctx) {
-  let lastCall = 0;
-  let timeout;
-  let lastArgs;
+  const timerId = useRef<NodeJS.Timeout>();
 
-  return function(...args) {
-    const now = Date.now();
+  useEffect(
+    () => () => {
+      if (timerId.current) {
+        clearTimeout(timerId.current);
+      }
+    },
+    []
+  );
 
-    if (!lastCall) {
-      fn.apply(ctx, args);
-      lastCall = now;
-      return;
-    }
+  if (timerId.current) {
+    clearTimeout(timerId.current);
+  }
 
-    if (now - lastCall >= delay) {
-      fn.apply(ctx, args);
-      lastCall = now;
-    } else {
-      lastArgs = args;
+  timerId.current = setTimeout(() => {
+    setDebouncedValue(value);
+  }, delayMs);
 
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        if (lastArgs) {
-          fn.apply(ctx, lastArgs);
-          lastCall = Date.now();
-          lastArgs = null;
-        }
-      }, delay - (now - lastCall));
-    }
-  };
-}
+  return debouncedValue;
+};
