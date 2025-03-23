@@ -1,5 +1,4 @@
-type PositionX = 'left' | 'rigth';
-type PositionY = 'top' | 'bottom';
+import { PositionX, PositionY } from "types/common";
 
 type GetAdjustedInitialCoords = (params: {
   anchorEl: HTMLElement;
@@ -20,9 +19,9 @@ export const getAdjustedInitialCoords: GetAdjustedInitialCoords = (params) => {
 
   const { top, bottom, left, right } = anchorEl.getBoundingClientRect();
 
-  const yTop = top - targetEl.clientHeight - offset;
+  const yTop = top - targetEl.offsetHeight - offset;
   const yBottom = bottom + offset;
-  const xLeft = left - targetEl.clientWidth - offset;
+  const xLeft = left - targetEl.offsetWidth - offset;
   const xRight = right + offset;
 
   // Позиция bottom-right по умолчанию
@@ -35,9 +34,9 @@ export const getAdjustedInitialCoords: GetAdjustedInitialCoords = (params) => {
 
   // Корректировка позиционирования относительно границ окна
   if (resultTop < 0) resultTop = yBottom;
-  if (resultTop + targetEl.clientHeight > window.innerHeight) resultTop = yTop;
+  if (resultTop + targetEl.offsetHeight > window.innerHeight) resultTop = yTop;
   if (resultLeft < 0) resultLeft = xRight;
-  if (resultLeft + targetEl.clientWidth > window.innerWidth) resultLeft = xLeft;
+  if (resultLeft + targetEl.offsetWidth > window.innerWidth) resultLeft = xLeft;
 
   return {
     top: resultTop,

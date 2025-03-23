@@ -1,22 +1,31 @@
 import { MouseEvent, RefObject, useCallback, useRef } from 'react';
-import { getLimitedValue } from 'utils/numbers';
 
-type UseResizableParams = {
+export type UseResizableParams = {
   targetRef: RefObject<HTMLElement>;
   resizeControlRef: RefObject<HTMLElement>;
-  minWidth?: number;
-  minHeight?: number;
+  minWidth?: string;
+  minHeight?: string;
 };
 
 export const useResizable = (params: UseResizableParams) => {
-  const { targetRef, resizeControlRef, minWidth = 0, minHeight = 0 } = params;
+  const {
+    targetRef,
+    resizeControlRef,
+    minWidth = '0px',
+    minHeight = '0px',
+  } = params;
 
+  // Координаты мыши на момент начала ресайза
   const startXRef = useRef(0);
   const startYRef = useRef(0);
-  const startTargetWidthRef = useRef(0);
-  const startTargetHeightRef = useRef(0);
+
+  // Координаты элемента на момент начала ресайза
   const startTargetTopRef = useRef(0);
   const startTargetLeftRef = useRef(0);
+
+  // Размеры элемента на момент начала ресайза
+  const startTargetWidthRef = useRef(0);
+  const startTargetHeightRef = useRef(0);
 
   const handleMouseMove = useCallback(
     (evt: globalThis.MouseEvent) => {
@@ -25,19 +34,22 @@ export const useResizable = (params: UseResizableParams) => {
 
       if (!targetEl || !controlEl) return;
 
+      // Длина перемещения курсора
       const moveX = evt.clientX - startXRef.current;
       const moveY = evt.clientY - startYRef.current;
 
+      // Новые размеры элемента с учетом длины перемещения курсора
       const width = startTargetWidthRef.current + moveX;
       const height = startTargetHeightRef.current + moveY;
 
+      // Верхние пределы размеров элемента для сохранения его расположения в границах окна браузера
       const maxWidth = window.innerWidth - startTargetLeftRef.current;
       const maxHeight = window.innerHeight - startTargetTopRef.current;
 
-      targetEl.style.width = `${getLimitedValue(minWidth, width, maxWidth)}px`;
-      targetEl.style.height = `${getLimitedValue(minHeight, height, maxHeight)}px`;
+      targetEl.style.width = `${Math.min(width, maxWidth)}px`;
+      targetEl.style.height = `${Math.min(height, maxHeight)}px`;
     },
-    [targetRef, resizeControlRef, minWidth, minHeight],
+    [],
   );
 
   const handleMouseUp = () => {
@@ -55,21 +67,25 @@ export const useResizable = (params: UseResizableParams) => {
     document.addEventListener('mouseup', handleMouseUp, { once: true });
     document.addEventListener('mousemove', handleMouseMove, { passive: true });
 
+    // Установка координат мыши на момент начала ресайза
     startXRef.current = evt.clientX;
     startYRef.current = evt.clientY;
-    startTargetWidthRef.current = targetEl.clientWidth;
-    startTargetHeightRef.current = targetEl.clientHeight;
 
+    // Установка координат элемента на момент начала ресайза
     const { top, left } = targetEl.getBoundingClientRect();
     startTargetTopRef.current = top;
     startTargetLeftRef.current = left;
+
+    // Установка размеров элемента на момент начала ресайза
+    startTargetWidthRef.current = targetEl.offsetWidth;
+    startTargetHeightRef.current = targetEl.offsetHeight;
   };
 
   return {
     resizable: {
       style: {
-        minWidth: `${minWidth}px`,
-        minHeight: `${minHeight}px`,
+        minWidth,
+        minHeight,
       },
     },
     resizeControl: {
