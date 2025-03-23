@@ -1,34 +1,38 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { TransitionComponentProps, TransitionProps } from './types';
-import { getTransitionStringFromParams, setStyles } from './utils';
+import { setStyles } from './utils';
 
 const TransitionComponent = (props: TransitionComponentProps) => {
-  const { isShow, intro, exit, children, setMounted } = props;
+  const {
+    isShow,
+    enterFrom,
+    enterTo,
+    enterTransition = '',
+    leaveTo,
+    leaveTransition = '',
+    children,
+    setMounted,
+  } = props;
 
   const [isInitial, setIsInitial] = useState(true);
 
   const helperElementRef = useRef<HTMLDivElement>(null);
   const elementRef = useRef<HTMLElement | null>();
 
-  const introFromProperties = useMemo(
-    () => (intro ? Object.keys(intro.from) : []),
+  const enterFromProperties = useMemo(
+    () => (enterFrom ? Object.keys(enterFrom) : []),
     [],
   );
-  const introToProperties = useMemo(
-    () => (intro ? Object.keys(intro.to) : []),
-    [],
-  );
-  const introTransition = useMemo(
-    () => getTransitionStringFromParams(intro),
+  const enterToProperties = useMemo(
+    () => (enterTo ? Object.keys(enterTo) : enterFromProperties),
     [],
   );
 
-  const exitToProperties = useMemo(
-    () => (exit ? Object.keys(exit.to) : []),
+  const leaveToProperties = useMemo(
+    () => (leaveTo ? Object.keys(leaveTo) : []),
     [],
   );
-  const exitTransition = useMemo(() => getTransitionStringFromParams(exit), []);
 
   useLayoutEffect(() => {
     if (isInitial) {
@@ -37,35 +41,40 @@ const TransitionComponent = (props: TransitionComponentProps) => {
       setIsInitial(false);
     }
 
-    if (!intro || !isShow) return;
+    if (!enterFrom || !isShow) return;
 
     const element = elementRef.current;
     if (!element) return;
 
-    element.style.transition = '';
-    setStyles(element, introFromProperties, intro.from);
+    const resetTransition = () => {
+      element.style.transition = '';
+    };
+
+    resetTransition();
+    setStyles(element, enterFromProperties, enterFrom);
+
+    element.addEventListener('transitionend', resetTransition, { once: true });
 
     requestAnimationFrame(() => {
-      element.style.transition = introTransition;
-      setStyles(element, introToProperties, intro.to);
+      element.style.transition = enterTransition;
+      setStyles(element, enterToProperties, enterTo);
     });
   }, [isShow]);
 
   useLayoutEffect(() => {
-    if (!exit || isShow) return;
+    if (!leaveTo || isShow) return;
 
     const element = elementRef.current;
     if (!element) return;
 
-    const timeout = setTimeout(() => {
-      setMounted(false);
-    }, exit.time);
+    const unmount = () => setMounted(false);
+    element.addEventListener('transitionend', unmount, { once: true });
 
-    element.style.transition = exitTransition;
-    setStyles(element, exitToProperties, exit.to);
+    element.style.transition = leaveTransition;
+    setStyles(element, leaveToProperties, leaveTo);
 
     return () => {
-      clearTimeout(timeout);
+      element.removeEventListener('transitionend', unmount);
     };
   }, [isShow]);
 
