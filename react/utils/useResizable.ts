@@ -3,17 +3,10 @@ import { MouseEvent, RefObject, useCallback, useRef } from 'react';
 export type UseResizableParams = {
   targetRef: RefObject<HTMLElement>;
   resizeControlRef: RefObject<HTMLElement>;
-  minWidth?: string;
-  minHeight?: string;
 };
 
 export const useResizable = (params: UseResizableParams) => {
-  const {
-    targetRef,
-    resizeControlRef,
-    minWidth = '0px',
-    minHeight = '0px',
-  } = params;
+  const { targetRef, resizeControlRef } = params;
 
   // Координаты мыши на момент начала ресайза
   const startXRef = useRef(0);
@@ -82,15 +75,7 @@ export const useResizable = (params: UseResizableParams) => {
   };
 
   return {
-    resizable: {
-      style: {
-        minWidth,
-        minHeight,
-      },
-    },
-    resizeControl: {
-      style: { cursor: 'nw-resize' },
-      onMouseDown: handleMouseDown,
-    },
+    style: { cursor: 'nw-resize' },
+    onMouseDown: handleMouseDown,
   };
 };
