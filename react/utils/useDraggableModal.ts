@@ -127,12 +127,8 @@ export const useDraggableModal = (params: UseDraggableModalParams) => {
     const modalWidth = modal.offsetWidth;
     const modalHeight = modal.offsetHeight;
 
-    // По умолчанию размещение модалки по центру экрана
-    const centerTop = window.innerHeight / 2 - modalHeight / 2;
-    const centerLeft = window.innerWidth / 2 - modalWidth / 2;
-
-    let initialTop = Math.max(centerTop, 0);
-    let initialLeft = Math.max(centerLeft, 0);
+    let initialTop = 0;
+    let initialLeft = 0;
 
     const anchorEl = anchorRef?.current;
 
@@ -147,6 +143,12 @@ export const useDraggableModal = (params: UseDraggableModalParams) => {
       });
       initialTop = Math.max(top, 0);
       initialLeft = Math.max(left, 0);
+    } else {
+      // По умолчанию размещение модалки по центру экрана
+      const centerTop = window.innerHeight / 2 - modalHeight / 2;
+      const centerLeft = window.innerWidth / 2 - modalWidth / 2;
+      initialTop = Math.max(centerTop, 0);
+      initialLeft = Math.max(centerLeft, 0);
     }
 
     modal.style.top = `${initialTop}px`;
