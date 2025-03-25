@@ -3,6 +3,7 @@ import {
   useEffect,
   useState,
   useRef,
+  RefObject,
 } from "react";
 
 export function useAppearanceDelay(
@@ -61,4 +62,38 @@ export const useDebouncedValue = <T>(value: T, delayMs: number) => {
   }, delayMs);
 
   return debouncedValue;
+};
+
+export const useScrollIntoView = (
+  elementRef: RefObject<HTMLElement>,
+  condition: boolean,
+) => {
+  useEffect(() => {
+    if (!condition) return;
+
+    elementRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }, [elementRef, condition]);
+};
+
+export const useScrollToElements = (
+  data: { elementRef: RefObject<HTMLElement>; condition: boolean }[],
+) => {
+  const enabled = useRef(true);
+  enabled.current = true;
+
+  for (const { elementRef, condition } of data) {
+    useEffect(() => {
+      if (!condition || !enabled.current) return;
+
+      enabled.current = false;
+
+      elementRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, [elementRef, condition]);
+  }
 };
