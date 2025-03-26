@@ -11,6 +11,7 @@ const TransitionComponent = (props: TransitionComponentProps) => {
     enterTransition = '',
     leaveTo,
     leaveTransition = '',
+    transition = '',
     children,
     setMounted,
   } = props;
@@ -18,7 +19,7 @@ const TransitionComponent = (props: TransitionComponentProps) => {
   const [isInitial, setIsInitial] = useState(true);
 
   const helperElementRef = useRef<HTMLDivElement>(null);
-  const elementRef = useRef<HTMLElement | null>();
+  const elementRef = useRef<HTMLElement | null>(null);
 
   const enterFromProperties = useMemo(
     () => (enterFrom ? Object.keys(enterFrom) : []),
@@ -35,12 +36,13 @@ const TransitionComponent = (props: TransitionComponentProps) => {
   );
 
   useLayoutEffect(() => {
-    if (isInitial) {
-      const helperElement = helperElementRef.current;
-      elementRef.current = helperElement?.nextSibling as HTMLElement | null;
-      setIsInitial(false);
-    }
+    const helperElement = helperElementRef.current;
+    elementRef.current = helperElement?.nextSibling as HTMLElement | null;
+    setIsInitial(false);
+    setMounted(true);
+  }, []);
 
+  useLayoutEffect(() => {
     if (!enterFrom || !isShow) return;
 
     const element = elementRef.current;
@@ -56,25 +58,35 @@ const TransitionComponent = (props: TransitionComponentProps) => {
     element.addEventListener('transitionend', resetTransition, { once: true });
 
     requestAnimationFrame(() => {
-      element.style.transition = enterTransition;
+      element.style.transition = enterTransition || transition;
       setStyles(element, enterToProperties, enterTo);
     });
   }, [isShow]);
 
   useLayoutEffect(() => {
-    if (!leaveTo || isShow) return;
+    if (isShow) return;
+
+    const unmount = () => setMounted(false);
+
+    if (!leaveTo) {
+      unmount();
+      return;
+    }
 
     const element = elementRef.current;
     if (!element) return;
 
-    const unmount = () => setMounted(false);
     element.addEventListener('transitionend', unmount, { once: true });
 
-    element.style.transition = leaveTransition;
+    element.style.transition = leaveTransition || transition;
     setStyles(element, leaveToProperties, leaveTo);
 
     return () => {
+      if (!leaveTo) return;
+
       element.removeEventListener('transitionend', unmount);
+      element.style.transition = '';
+      setStyles(element, leaveToProperties);
     };
   }, [isShow]);
 
@@ -90,11 +102,7 @@ export const Transition = (props: TransitionProps) => {
   const { isShow = true, ...otherProps } = props;
   const [mounted, setMounted] = useState(isShow);
 
-  useLayoutEffect(() => {
-    if (isShow) setMounted(true);
-  }, [isShow]);
-
-  if (!mounted) return null;
+  if (!isShow && !mounted) return null;
 
   return (
     <TransitionComponent

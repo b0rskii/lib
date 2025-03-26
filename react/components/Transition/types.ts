@@ -7,6 +7,7 @@ export type TransitionComponentProps = {
   enterTransition?: string;
   leaveTo?: Partial<CSSStyleDeclaration>;
   leaveTransition?: string;
+  transition?: string;
   children: ReactElement;
   setMounted: (value: boolean) => void;
 };
