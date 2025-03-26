@@ -10,25 +10,21 @@ import { getLimitedValue } from 'utils/numbers';
 import { getAdjustedInitialCoords } from 'utils/elementsPositioning';
 import { PositionX, PositionY } from 'types/common';
 
-const DRAGGABLE_DATA_ATTR = 'data-draggable-modal';
 const DEFAULT_OFFSET = 16;
 
 export type UseDraggableModalParams = {
-  modalRef: RefObject<HTMLElement>;
   anchorRef?: RefObject<HTMLElement>;
   positionX?: PositionX;
   positionY?: PositionY;
   offset?: number;
 };
 
-export const useDraggableModal = (params: UseDraggableModalParams) => {
-  const {
-    modalRef,
-    anchorRef,
-    positionX,
-    positionY,
-    offset = DEFAULT_OFFSET,
-  } = params;
+export const useDraggableModal = <Modal extends HTMLElement>(
+  params: UseDraggableModalParams,
+) => {
+  const { anchorRef, positionX, positionY, offset = DEFAULT_OFFSET } = params;
+
+  const modalRef = useRef<Modal | null>(null);
 
   // Координаты мыши на момент начала перемещения
   const startXRef = useRef(0);
@@ -85,22 +81,8 @@ export const useDraggableModal = (params: UseDraggableModalParams) => {
 
     modal.style.cursor = 'grabbing';
 
-    // Коллекция открытых на данный момент перемещаемых модалок
-    const dragModals = document.querySelectorAll<HTMLDivElement>(
-      `[${DRAGGABLE_DATA_ATTR}]`,
-    );
-
-    // Вывод текущей модалки на передний план относительно других открытых перемещаемых модалок
-    if (dragModals.length > 1) {
-      let maxZIndex = 0;
-
-      dragModals.forEach((modal) => {
-        const { zIndex } = modal.style;
-        maxZIndex = Math.max(maxZIndex, Number(zIndex));
-      });
-
-      modal.style.zIndex = `${maxZIndex + 1}`;
-    }
+    // Вывод текущей модалки на передний план относительно других открытых модалок
+    modal.parentElement?.append(modal);
 
     // Установка координат мыши на момент начала перемещения
     startXRef.current = evt.clientX;
@@ -186,7 +168,7 @@ export const useDraggableModal = (params: UseDraggableModalParams) => {
   }, []);
 
   return {
-    [DRAGGABLE_DATA_ATTR]: '',
+    ref: modalRef,
     onMouseDown: handleMouseDown,
   };
 };

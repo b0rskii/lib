@@ -1,12 +1,11 @@
-import { MouseEvent, RefObject, useCallback, useRef } from 'react';
+import { MouseEvent, useCallback, useRef } from 'react';
 
-export type UseResizableParams = {
-  targetRef: RefObject<HTMLElement>;
-  resizeControlRef: RefObject<HTMLElement>;
-};
-
-export const useResizable = (params: UseResizableParams) => {
-  const { targetRef, resizeControlRef } = params;
+export const useResizable = <
+  Target extends HTMLElement,
+  Resizer extends HTMLElement,
+>() => {
+  const targetRef = useRef<Target | null>(null);
+  const resizeControlRef = useRef<Resizer | null>(null);
 
   // Координаты мыши на момент начала ресайза
   const startXRef = useRef(0);
@@ -75,7 +74,13 @@ export const useResizable = (params: UseResizableParams) => {
   };
 
   return {
-    style: { cursor: 'nw-resize' },
-    onMouseDown: handleMouseDown,
+    resizable: {
+      ref: targetRef,
+    },
+    resizer: {
+      ref: resizeControlRef,
+      style: { cursor: 'nw-resize' },
+      onMouseDown: handleMouseDown,
+    },
   };
 };
