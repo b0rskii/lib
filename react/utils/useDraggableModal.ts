@@ -1,5 +1,5 @@
 import {
-  MouseEvent,
+  PointerEvent,
   RefObject,
   useCallback,
   useEffect,
@@ -10,6 +10,7 @@ import { getLimitedValue } from 'utils/numbers';
 import { getAdjustedInitialCoords } from 'utils/elementsPositioning';
 import { PositionX, PositionY } from 'types/common';
 import { globalCursor } from 'utils/globalCursor';
+import { externalContentElements } from 'utils/externalContentElements';
 
 const DEFAULT_OFFSET = 16;
 
@@ -39,8 +40,8 @@ export const useDraggableModal = <Modal extends HTMLElement>(
   const modalWidthRef = useRef(0);
   const modalHeightRef = useRef(0);
 
-  const handleMouseMove = useCallback(
-    (evt: globalThis.MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (evt: globalThis.PointerEvent) => {
       const modal = modalRef.current;
       if (!modal) return;
 
@@ -62,21 +63,26 @@ export const useDraggableModal = <Modal extends HTMLElement>(
     [],
   );
 
-  const handleMouseUp = () => {
-    document.removeEventListener('mousemove', handleMouseMove);
+  const handlePointerUp = () => {
+    document.removeEventListener('pointermove', handlePointerMove);
+    externalContentElements.reset();
     globalCursor.reset();
   };
 
-  const handleMouseDown = (evt: MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = (evt: PointerEvent<HTMLDivElement>) => {
     const modal = modalRef.current;
     if (!modal) return;
 
     evt.preventDefault();
     evt.stopPropagation();
-    document.addEventListener('mouseup', handleMouseUp, { once: true });
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('pointerup', handlePointerUp, { once: true });
+    document.addEventListener('pointermove', handlePointerMove);
 
-    globalCursor.set('grabbing');
+    // Фиксирование вида курсора на время перемещения
+    if (evt.pointerType === 'mouse') globalCursor.set('grabbing');
+
+    // Блокировка pointer событий на элементах, встраивающих внешний контент, на время перемещения
+    externalContentElements.disable();
 
     // Вывод текущей модалки на передний план относительно других открытых модалок
     modal.parentElement?.append(modal);
@@ -102,6 +108,7 @@ export const useDraggableModal = <Modal extends HTMLElement>(
 
     modal.style.position = 'fixed';
     modal.style.cursor = 'grab';
+    modal.style.touchAction = 'none';
 
     const modalWidth = modal.offsetWidth;
     const modalHeight = modal.offsetHeight;
@@ -161,12 +168,13 @@ export const useDraggableModal = <Modal extends HTMLElement>(
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      externalContentElements.reset();
       globalCursor.reset();
     };
   }, []);
 
   return {
     ref: modalRef,
-    onMouseDown: handleMouseDown,
+    onPointerDown: handlePointerDown,
   };
 };

@@ -1,4 +1,6 @@
-import { MouseEvent, useCallback, useRef } from 'react';
+import { PointerEvent, useCallback, useEffect, useRef } from 'react';
+import { externalContentElements } from 'utils/externalContentElements';
+import { globalCursor } from 'utils/globalCursor';
 
 export const useResizable = <
   Target extends HTMLElement,
@@ -19,8 +21,8 @@ export const useResizable = <
   const startTargetWidthRef = useRef(0);
   const startTargetHeightRef = useRef(0);
 
-  const handleMouseMove = useCallback(
-    (evt: globalThis.MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (evt: globalThis.PointerEvent) => {
       const targetEl = targetRef.current;
       const controlEl = resizeControlRef.current;
 
@@ -44,11 +46,13 @@ export const useResizable = <
     [],
   );
 
-  const handleMouseUp = () => {
-    document.removeEventListener('mousemove', handleMouseMove);
+  const handlePointerUp = () => {
+    document.removeEventListener('pointermove', handlePointerMove);
+    externalContentElements.reset();
+    globalCursor.reset();
   };
 
-  const handleMouseDown = (evt: MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = (evt: PointerEvent<HTMLDivElement>) => {
     const targetEl = targetRef.current;
     const controlEl = resizeControlRef.current;
 
@@ -56,8 +60,14 @@ export const useResizable = <
 
     evt.preventDefault();
     evt.stopPropagation();
-    document.addEventListener('mouseup', handleMouseUp, { once: true });
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('pointerup', handlePointerUp, { once: true });
+    document.addEventListener('pointermove', handlePointerMove);
+
+    // Фиксирование вида курсора на время ресайза
+    if (evt.pointerType === 'mouse') globalCursor.set('nw-resize');
+
+    // Блокировка pointer событий на элементах, встраивающих внешний контент, на время ресайза
+    externalContentElements.disable();
 
     // Установка координат мыши на момент начала ресайза
     startXRef.current = evt.clientX;
@@ -73,6 +83,13 @@ export const useResizable = <
     startTargetHeightRef.current = targetEl.offsetHeight;
   };
 
+  useEffect(() => {
+    return () => {
+      externalContentElements.reset();
+      globalCursor.reset();
+    };
+  }, []);
+
   return {
     resizable: {
       ref: targetRef,
@@ -80,7 +97,7 @@ export const useResizable = <
     resizer: {
       ref: resizeControlRef,
       style: { cursor: 'nw-resize' },
-      onMouseDown: handleMouseDown,
+      onPointerDown: handlePointerDown,
     },
   };
 };
