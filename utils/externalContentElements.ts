@@ -1,10 +1,10 @@
-class GlobalCursor {
+class ExternalContentElements {
   private styleElement: HTMLStyleElement | null = null;
 
-  set(cursor: string) {
+  disable() {
     if (this.styleElement) return;
     this.styleElement = document.createElement('style');
-    this.styleElement.textContent = `* {cursor: ${cursor} !important}`;
+    this.styleElement.textContent = `embed, object, iframe {pointer-events: none !important}`;
     document.documentElement.prepend(this.styleElement);
   }
 
@@ -14,4 +14,4 @@ class GlobalCursor {
   }
 }
 
-export const globalCursor = new GlobalCursor();
+export const externalContentElements = new ExternalContentElements();
