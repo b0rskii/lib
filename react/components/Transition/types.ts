@@ -8,6 +8,8 @@ export type TransitionComponentProps = {
   leaveTo?: Partial<CSSStyleDeclaration>;
   leaveTransition?: string;
   transition?: string;
+  enterAnimation?: string;
+  leaveAnimation?: string;
   children: ReactElement;
   setMounted: (value: boolean) => void;
 };
