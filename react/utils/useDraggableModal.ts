@@ -9,8 +9,7 @@ import {
 import { getLimitedValue } from 'utils/numbers';
 import { getAdjustedInitialCoords } from 'utils/elementsPositioning';
 import { PositionX, PositionY } from 'types/common';
-import { globalCursor } from 'utils/globalCursor';
-import { externalContentElements } from 'utils/externalContentElements';
+import { globalStyles } from 'utils/globalStyles';
 
 const DEFAULT_OFFSET = 16;
 
@@ -65,8 +64,7 @@ export const useDraggableModal = <Modal extends HTMLElement>(
 
   const handlePointerUp = () => {
     document.removeEventListener('pointermove', handlePointerMove);
-    externalContentElements.reset();
-    globalCursor.reset();
+    globalStyles.reset();
   };
 
   const handlePointerDown = (evt: PointerEvent<HTMLDivElement>) => {
@@ -79,13 +77,16 @@ export const useDraggableModal = <Modal extends HTMLElement>(
     document.addEventListener('pointermove', handlePointerMove);
 
     // Фиксирование вида курсора на время перемещения
-    if (evt.pointerType === 'mouse') globalCursor.set('grabbing');
-
+    if (evt.pointerType === 'mouse') {
+      globalStyles.setCursor('grabbing');
+    }
     // Блокировка pointer событий на элементах, встраивающих внешний контент, на время перемещения
-    externalContentElements.disable();
+    globalStyles.disableExternalContentElements();
 
-    // Вывод текущей модалки на передний план относительно других открытых модалок
-    modal.parentElement?.append(modal);
+    // Вывод текущей модалки на передний план
+    if (modal.nextElementSibling) {
+      modal.parentElement?.append(modal);
+    }
 
     // Установка координат мыши на момент начала перемещения
     startXRef.current = evt.clientX;
@@ -168,8 +169,7 @@ export const useDraggableModal = <Modal extends HTMLElement>(
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      externalContentElements.reset();
-      globalCursor.reset();
+      globalStyles.reset();
     };
   }, []);
 
