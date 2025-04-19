@@ -11,8 +11,6 @@ import { getAdjustedInitialCoords } from 'utils/elementsPositioning';
 import { PositionX, PositionY } from 'types/common';
 import { globalStyles } from 'utils/globalStyles';
 
-const DEFAULT_OFFSET = 16;
-
 export type UseDraggableModalParams = {
   anchorRef?: RefObject<HTMLElement>;
   positionX?: PositionX;
@@ -23,7 +21,7 @@ export type UseDraggableModalParams = {
 export const useDraggableModal = <Modal extends HTMLElement>(
   params: UseDraggableModalParams,
 ) => {
-  const { anchorRef, positionX, positionY, offset = DEFAULT_OFFSET } = params;
+  const { anchorRef, positionX, positionY, offset = 0 } = params;
 
   const modalRef = useRef<Modal | null>(null);
 

@@ -14,7 +14,7 @@ export const getAdjustedInitialCoords: GetAdjustedInitialCoords = (params) => {
     targetEl,
     offset,
     positionY = 'bottom',
-    positionX = 'rigth',
+    positionX = 'right',
   } = params;
 
   const { top, bottom, left, right } = anchorEl.getBoundingClientRect();

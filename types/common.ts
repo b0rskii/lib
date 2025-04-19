@@ -1,2 +1,2 @@
-export type PositionX = 'left' | 'rigth';
+export type PositionX = 'left' | 'right';
 export type PositionY = 'top' | 'bottom';
