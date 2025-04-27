@@ -1,21 +1,21 @@
-import { MutableRefObject, useEffect, useMemo, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef } from 'react';
+
+const DEFAULT_OPTIONS: ScrollIntoViewOptions = {
+  behavior: 'smooth',
+  block: 'center',
+};
 
 export const useScrollIntoView = <T extends HTMLElement>(
-  condition: boolean,
+  condition?: boolean,
   options?: ScrollIntoViewOptions,
 ) => {
   const ref = useRef<T | null>(null);
 
   useEffect(() => {
-    if (!condition) return;
+    if (condition === false) return;
 
-    ref.current?.scrollIntoView(
-      options ?? {
-        behavior: 'smooth',
-        block: 'center',
-      },
-    );
-  }, [condition, options]);
+    ref.current?.scrollIntoView(options ?? DEFAULT_OPTIONS);
+  }, [condition]);
 
   return ref;
 };
@@ -26,15 +26,6 @@ export const useScrollToElements = <T extends HTMLElement>(
 ) => {
   const enabled = useRef(true);
   enabled.current = true;
-
-  const optionsValue: ScrollIntoViewOptions = useMemo(
-    () =>
-      options ?? {
-        behavior: 'smooth',
-        block: 'center',
-      },
-    [options],
-  );
 
   const refs: MutableRefObject<T | null>[] = [];
 
@@ -47,8 +38,8 @@ export const useScrollToElements = <T extends HTMLElement>(
 
       enabled.current = false;
 
-      ref.current?.scrollIntoView(optionsValue);
-    }, [condition, optionsValue]);
+      ref.current?.scrollIntoView(options ?? DEFAULT_OPTIONS);
+    }, [condition]);
   }
 
   return refs;
