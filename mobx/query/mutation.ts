@@ -28,18 +28,13 @@ export class Mutation<
     return this.status === 'error';
   }
 
-  constructor({
-    mutationFn,
-    errorMessage = null,
-    onSuccess,
-    onError,
-  }: MutationParams<MutationFn>) {
+  constructor(params: MutationParams<MutationFn>) {
     makeAutoObservable(this);
 
-    this.errorMessage = errorMessage;
-    this.mutationFn = mutationFn;
-    this.onSuccess = onSuccess;
-    this.onError = onError;
+    this.errorMessage = params.errorMessage ?? null;
+    this.mutationFn = params.mutationFn;
+    this.onSuccess = params.onSuccess;
+    this.onError = params.onError;
   }
 
   setError(value: string) {
@@ -58,7 +53,7 @@ export class Mutation<
         });
         return data;
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         runInAction(() => {
           this.status = 'error';
           this.error = this.errorMessage;

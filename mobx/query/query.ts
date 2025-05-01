@@ -37,23 +37,17 @@ export class Query<
     return this.status === 'error';
   }
 
-  constructor({
-    queryFn,
-    initialData = null,
-    errorMessage = null,
-    onSuccess,
-    onError,
-  }: QueryParams<QueryFn, Data>) {
+  constructor(params: QueryParams<QueryFn, Data>) {
     makeAutoObservable(this);
 
-    this.data = initialData;
-    this.errorMessage = errorMessage;
-    this.queryFn = queryFn;
-    this.onSuccess = onSuccess;
-    this.onError = onError;
+    this.data = params.initialData ?? null;
+    this.errorMessage = params.errorMessage ?? null;
+    this.queryFn = params.queryFn;
+    this.onSuccess = params.onSuccess;
+    this.onError = params.onError;
   }
 
-  setData(value: Data) {
+  setData(value: Data | null) {
     this.data = value;
   }
 
@@ -61,7 +55,7 @@ export class Query<
     this.error = value;
   }
 
-  clearData() {
+  reset() {
     this.data = null;
     this.error = null;
   }
@@ -79,7 +73,7 @@ export class Query<
         });
         return data;
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         runInAction(() => {
           this.status = 'error';
           this.error = this.errorMessage;
