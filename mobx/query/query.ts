@@ -5,22 +5,24 @@ type QueryParams<
   QueryFn extends RequestFn,
   Data extends RequestData<QueryFn>,
 > = {
-  queryFn: QueryFn;
   initialData?: Data | null;
   errorMessage?: string | null;
+  queryFn: QueryFn;
   onSuccess?: (data: Data) => void;
   onError?: (error: unknown) => void;
+  onSettled?: () => void;
 };
 
 export class Query<
   QueryFn extends RequestFn,
   Data extends RequestData<QueryFn>,
 > {
+  private status: Status = 'idle';
+  private errorMessage: string | null;
   private queryFn: QueryFn;
   private onSuccess?: OnResultCallback<Data>;
   private onError?: OnResultCallback<unknown>;
-  private errorMessage: string | null;
-  private status: Status = 'idle';
+  private onSettled?: OnResultCallback<void>;
 
   data: Data | null = null;
   error: string | null = null;
@@ -45,6 +47,7 @@ export class Query<
     this.queryFn = params.queryFn;
     this.onSuccess = params.onSuccess;
     this.onError = params.onError;
+    this.onSettled = params.onSettled;
   }
 
   setData(value: Data | null) {
@@ -61,8 +64,8 @@ export class Query<
   }
 
   fetch(...args: Parameters<QueryFn>) {
-    this.error = null;
     this.status = 'pending';
+    this.error = null;
 
     return this.queryFn(...args)
       .then((data) => {
@@ -80,6 +83,9 @@ export class Query<
           this.onError?.(error);
         });
         return error;
+      })
+      .finally(() => {
+        this.onSettled?.();
       }) as ReturnType<QueryFn>;
   }
 }
