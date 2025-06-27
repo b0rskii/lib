@@ -1,4 +1,6 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef, useState } from 'react';
+
+type Condition = boolean | string | null | undefined;
 
 const DEFAULT_OPTIONS: ScrollIntoViewOptions = {
   behavior: 'smooth',
@@ -6,41 +8,31 @@ const DEFAULT_OPTIONS: ScrollIntoViewOptions = {
 };
 
 export const useScrollIntoView = <T extends HTMLElement>(
-  condition?: boolean,
+  conditions: Condition[],
   options?: ScrollIntoViewOptions,
 ) => {
-  const ref = useRef<T | null>(null);
-
-  useEffect(() => {
-    if (condition === false) return;
-
-    ref.current?.scrollIntoView(options ?? DEFAULT_OPTIONS);
-  }, [condition]);
-
-  return ref;
-};
-
-export const useScrollToElements = <T extends HTMLElement>(
-  conditions: boolean[],
-  options?: ScrollIntoViewOptions,
-) => {
-  const enabled = useRef(true);
-  enabled.current = true;
-
+  const [trigger, setTrigger] = useState<{}>();
   const refs: MutableRefObject<T | null>[] = [];
 
-  for (const condition of conditions) {
+  for (let i = 0; i < conditions.length; i++) {
     const ref = useRef<T | null>(null);
     refs.push(ref);
-
-    useEffect(() => {
-      if (!condition || !enabled.current) return;
-
-      enabled.current = false;
-
-      ref.current?.scrollIntoView(options ?? DEFAULT_OPTIONS);
-    }, [condition]);
   }
 
-  return refs;
+  useEffect(() => {
+    if (!trigger) return;
+
+    for (let i = 0; i < conditions.length; i++) {
+      if (conditions[i]) {
+        refs[i].current?.scrollIntoView(options ?? DEFAULT_OPTIONS);
+        break;
+      }
+    }
+  }, [trigger]);
+
+  const triggerScroll = () => {
+    setTrigger({});
+  };
+
+  return { refs, triggerScroll };
 };
